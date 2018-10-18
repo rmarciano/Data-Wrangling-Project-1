@@ -1,0 +1,45 @@
+library(readr)
+library(tidyr)
+library(dplyr)
+refine <- read_csv("refine.csv")
+refine <- tbl_df(refine)
+
+#Clean up brand names
+
+refine <- refine %>% 
+  mutate(company = gsub("^P.*|^p.*|^f.*", "philips", company)) %>%  
+  mutate(company = gsub("^a.*|^A.*", "azko", company)) %>% 
+  mutate(company = gsub("^v.*|^V.*", "van houten", company)) %>% 
+  mutate(company = gsub("^u.*|^U.*", "unilever", company))
+
+#Separate product code and number
+
+refine <- refine %>% 
+  separate("Product code / number", c("product_code", "product_number"), sep = "-")
+
+#Add product categories
+
+refine <- refine %>% 
+  mutate(product_catgeory = ifelse(product_code == "p", "Smartphone", 
+                            ifelse(product_code == "v", "TV", 
+                            ifelse(product_code == "x", "Laptop", "Tablet"))))
+
+#Add full adress for geocoding (address, city, country)
+
+refine <- refine %>% 
+  unite("full_address", c("address", "city", "country"), sep =", ")
+
+#Create dummy variables for company and product category
+
+refine <- refine %>% 
+  mutate(company_philips = ifelse(company == "philips", 1, 0)) %>% 
+  mutate(company_azko = ifelse(company == "azko", 2, 0)) %>%
+  mutate(company_van_houten = ifelse(company == "van houten", 3, 0)) %>% 
+  mutate(company_unilever = ifelse(company == "unilever", 4, 0)) %>% 
+  mutate(product_smartphone = ifelse(product_code == "p", 1, 0)) %>% 
+  mutate(product_tv = ifelse(product_code == "v", 2, 0)) %>% 
+  mutate(product_laptop = ifelse(product_code == "x", 3, 0)) %>% 
+  mutate(product_tablet = ifelse(product_code == "q", 4, 0))
+  
+
+
